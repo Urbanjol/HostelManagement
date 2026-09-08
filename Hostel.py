@@ -6,13 +6,14 @@ Data Persistence: JSON File (hostel_records.json)
 import json
 import os
 
-# ==========================================
+
 # CONSTANTS & INITIAL DATA STRUCTURES
 # Requirement (a): Predefine at least three hostel blocks with fixed rooms and capacities
-# ==========================================
 ROOM_FEE = 1500000.0  # Standard hostel fee per student in UGX
 
 # Predefined Hostel Blocks Data Structure (Nested Dictionaries)
+#we could have implemented a list of lists here but for future use, we have to change data or add data to our hostel_blocks
+#so we implemented a global students = [] variable below 
 hostel_blocks = {
     "Block A": {"101": 2, "102": 2, "103": 4},
     "Block B": {"201": 2, "202": 3, "203": 3},
@@ -20,18 +21,19 @@ hostel_blocks = {
 }
 
 # Global List to store student records (List of Dictionaries)
-students = []
+students = [] #by default python wil set this as a global container but with a few restrictions
+               #so we implemented it inside the load_data() so as to be able to change its data directly without
+               #python creating  new variables each time
 
 DATA_FILE = "hostel_records.json"
 
 
-# ==========================================
 # FILE PERSISTENCE FUNCTIONS
 # Requirement (e): Save/load records to file & handle missing/damaged files gracefully
-# ==========================================
+
 def load_data():
     """Requirement (e): Load student records from JSON on program start."""
-    global students
+    global students  #so here is our students variable made global so that it can be changed 
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, "r") as file:
@@ -39,7 +41,7 @@ def load_data():
             print("Hostel records successfully loaded from database.")
         except (json.JSONDecodeError, OSError):
             print("Warning: Data file corrupted or unreadable. Starting with fresh records.")
-            students = []
+            students = [] #this will reload the students data without the program crashing
     else:
         print("No prior data file found. System initialized with fresh records.")
 
@@ -54,10 +56,11 @@ def save_data():
         print(f"Error saving data to file: {e}")
 
 
-# ==========================================
+
 # SYSTEM CORE & OCCUPANCY FUNCTIONS
 # Requirement (a): Data setup and occupancy overview
-# ==========================================
+#this is like a helper function, actually its a helper function that we will use in other functions to get room occupancy
+#without creating several loops again and again..
 def get_room_occupancy(block, room):
     """Helper: Calculates current student count for a specific room."""
     return sum(1 for s in students if s["block"] == block and s["room"] == room)
@@ -71,16 +74,15 @@ def display_occupancy_overview():
 
     for block, rooms in hostel_blocks.items():
         for room, capacity in rooms.items():
-            current = get_room_occupancy(block, room)
+            current = get_room_occupancy(block, room) #like here we have called it, otherwise we would have created new loops
             status = "FULL" if current >= capacity else f"{capacity - current} Space(s) Left"
             print(f"{block:<10} | Room {room:<3} | {current}/{capacity} occupants  | {status}")
     print("-" * 55)
 
 
-# ==========================================
 # STUDENT REGISTRATION & ALLOCATION
 # Requirement (b): Student registration, room capacity validation, and allocation
-# ==========================================
+# here in this function, we will allocate students after crucial checks pass.
 def allocate_student_room():
     """Requirement (b): Register a student and allocate them to an available room."""
     print("\n--- NEW STUDENT REGISTRATION & ROOM ALLOCATION ---")
@@ -90,11 +92,11 @@ def allocate_student_room():
         return
 
     # Check for duplicate registration
-    if any(s["reg_no"] == reg_no for s in students):
+    if any(s["reg_no"] == reg_no for s in students):#if there happens to be any student in our dictionary, then we will safeguard 
         print(f"Error: Student with Reg No '{reg_no}' is already registered!")
         return
 
-    name = input("Enter Student Full Name: ").strip()
+    name = input("Enter Student Full Name: ").strip() #stripping is just deleting unnecessary spaces that are beyond the input
 
     display_occupancy_overview()
 
@@ -133,10 +135,9 @@ def allocate_student_room():
     print(f"Total Hostel Fee Assigned: UGX {ROOM_FEE:,.2f}")
 
 
-# ==========================================
 # FEE PAYMENT RECORDING
 # Requirement (c): Record full/partial fee payments and update balance ledger
-# ==========================================
+# one of the critical functions that required alot of logical thinking and research
 def record_fee_payment():
     """Requirement (c): Record fee payments and update student outstanding balance."""
     print("\n--- RECORD FEE PAYMENT ---")
@@ -149,6 +150,7 @@ def record_fee_payment():
         return
 
     # if multiple students match, get the index of the same no. in a list form
+    #also called deambiguating
     student = matches[0]
     if len(matches) > 1:
         print("\nMultiple students found:")
@@ -261,10 +263,10 @@ def search_and_reporting():
         print("Invalid reporting selection.")
 
 
-# ==========================================
+
 # MAIN DRIVER LOOP
 # Requirement (f): Well-organized looping menu system with input validation throughout
-# ==========================================
+# responsible for all navigation of the functions easily 
 def main():
     """Requirement (f): Interactive user interface loop for system operation."""
     load_data()
@@ -293,7 +295,7 @@ def main():
             search_and_reporting()
         elif choice == "5":
             save_data()
-            print("System closed. Goodbye Warden!")
+            print("System closed. Have a nice day Warden!")
             break
         else:
             print("Invalid selection! Please enter a choice between 1 and 5.")
